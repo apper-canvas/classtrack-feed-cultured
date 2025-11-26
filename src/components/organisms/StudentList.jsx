@@ -12,8 +12,6 @@ import Empty from "@/components/ui/Empty";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 import Badge from "@/components/atoms/Badge";
-import Students from "@/components/pages/Students";
-import Attendance from "@/components/pages/Attendance";
 import SearchBar from "@/components/molecules/SearchBar";
 import StudentCard from "@/components/molecules/StudentCard";
 
@@ -136,19 +134,9 @@ const getStudentGrades = (studentId) => {
         />
       </div>
     );
-  }
+}
 
-  const filteredStudents = getFilteredAndSortedStudents()
-  const totalStudents = transformedStudents.length
-  const activeStudents = transformedStudents.length // Assuming all are active for now
-  const recentEnrollments = transformedStudents.filter(s => {
-    if (!s.enrollment_date_c) return false
-    const enrollmentDate = new Date(s.enrollment_date_c)
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    return enrollmentDate >= thirtyDaysAgo
-  }).length
-
+  // Define filtering and sorting function before using it
   const getFilteredAndSortedStudents = () => {
     let filtered = [...transformedStudents]
 
@@ -186,10 +174,10 @@ const getStudentGrades = (studentId) => {
           const bAvg = bGrades.length > 0 ? bGrades.reduce((sum, g) => sum + (parseFloat(g.score || g.grade || 0)), 0) / bGrades.length : 0
           return bAvg - aAvg
         case "attendance":
-          const aAttendance = attendance.filter(a => a.student_c === a.Id || a.studentId === String(a.Id || 0))
-          const bAttendance = attendance.filter(a => a.student_c === b.Id || a.studentId === String(b.Id || 0))
-          const aRate = aAttendance.length > 0 ? aAttendance.filter(att => att.status === 'present').length / aAttendance.length : 0
-          const bRate = bAttendance.length > 0 ? bAttendance.filter(att => att.status === 'present').length / bAttendance.length : 0
+          const aAttendanceRecords = attendance.filter(att => att.student_c === a.Id || att.studentId === String(a.Id || 0))
+          const bAttendanceRecords = attendance.filter(att => att.student_c === b.Id || att.studentId === String(b.Id || 0))
+          const aRate = aAttendanceRecords.length > 0 ? aAttendanceRecords.filter(att => att.status === 'present').length / aAttendanceRecords.length : 0
+          const bRate = bAttendanceRecords.length > 0 ? bAttendanceRecords.filter(att => att.status === 'present').length / bAttendanceRecords.length : 0
           return bRate - aRate
         default:
           return 0
@@ -198,6 +186,17 @@ const getStudentGrades = (studentId) => {
 
     return filtered
   }
+
+  const filteredStudents = getFilteredAndSortedStudents()
+  const totalStudents = transformedStudents.length
+  const activeStudents = transformedStudents.length // Assuming all are active for now
+  const recentEnrollments = transformedStudents.filter(s => {
+    if (!s.enrollment_date_c) return false
+    const enrollmentDate = new Date(s.enrollment_date_c)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    return enrollmentDate >= thirtyDaysAgo
+  }).length
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -303,9 +302,8 @@ const getStudentGrades = (studentId) => {
             </div>
           </div>
         </div>
-
-        <div className="p-6">
-<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredStudents.map(student => (
               <StudentCard
                 key={student.Id}
