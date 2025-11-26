@@ -1,9 +1,9 @@
-import { getApperClient } from "@/services/apperClient"
+import { getApperClient } from "@/services/apperClient";
 
 class StudentService {
   constructor() {
-    this.tableName = 'student_c'
-    this.lookupFields = ['class_c']
+    this.tableName = 'student_c';
+    this.lookupFields = ['class_c.Id', 'class_c.Name'];
   }
 
   async getAll() {
@@ -272,22 +272,22 @@ class StudentService {
         ],
         whereGroups: [{
           "operator": "OR",
-          "subGroups": [{
+"subGroups": [{
             "conditions": [
               {
-                "fieldName": "Name",
-                "operator": "Contains",
-                "values": [query]
+                "FieldName": "Name",
+                "Operator": "Contains",
+                "Values": [query]
               },
               {
-                "fieldName": "student_id_c",
-                "operator": "Contains",
-                "values": [query]
+                "FieldName": "student_id_c",
+                "Operator": "Contains",
+                "Values": [query]
               },
               {
-                "fieldName": "email_c",
-                "operator": "Contains",
-                "values": [query]
+                "FieldName": "email_c",
+                "Operator": "Contains",
+                "Values": [query]
               }
             ],
             "operator": "OR"

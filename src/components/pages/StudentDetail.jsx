@@ -1,17 +1,21 @@
-import React, { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { Card, CardHeader, CardContent } from "@/components/atoms/Card"
-import Button from "@/components/atoms/Button"
-import Badge from "@/components/atoms/Badge"
-import Loading from "@/components/ui/Loading"
-import ErrorView from "@/components/ui/ErrorView"
-import Empty from "@/components/ui/Empty"
-import ApperIcon from "@/components/ApperIcon"
-import studentService from "@/services/api/studentService"
-import gradeService from "@/services/api/gradeService"
-import attendanceService from "@/services/api/attendanceService"
-import assignmentService from "@/services/api/assignmentService"
-import { format } from "date-fns"
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Card, CardContent, CardHeader } from "@/components/atoms/Card";
+import { format } from "date-fns";
+import gradeService from "@/services/api/gradeService";
+import studentService from "@/services/api/studentService";
+import assignmentService from "@/services/api/assignmentService";
+import attendanceService from "@/services/api/attendanceService";
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import ErrorView from "@/components/ui/ErrorView";
+import Empty from "@/components/ui/Empty";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import Assignments from "@/components/pages/Assignments";
+import Students from "@/components/pages/Students";
+import Attendance from "@/components/pages/Attendance";
+import Grades from "@/components/pages/Grades";
 
 const StudentDetail = () => {
   const { id } = useParams()
@@ -64,15 +68,15 @@ const StudentDetail = () => {
   if (!student) return <ErrorView message="Student not found" />
 
   // Calculate statistics
-  const averageGrade = grades.length > 0 
-    ? Math.round(grades.reduce((sum, grade) => sum + grade.percentage, 0) / grades.length)
+const averageGrade = grades.length > 0 
+    ? Math.round(grades.reduce((sum, grade) => sum + (grade.percentage_c || 0), 0) / grades.length)
     : 0
   
-  const attendanceRate = attendance.length > 0
-    ? Math.round((attendance.filter(a => a.status === "present").length / attendance.length) * 100)
+const attendanceRate = attendance.length > 0
+    ? Math.round((attendance.filter(a => a.status_c === "present").length / attendance.length) * 100)
     : 0
 
-  const completedAssignments = assignments.filter(a => a.status === "submitted" || a.status === "graded").length
+const completedAssignments = assignments.filter(a => a.status_c === "submitted" || a.status_c === "graded").length
   const totalAssignments = assignments.length
 
   const tabs = [
@@ -92,35 +96,35 @@ const StudentDetail = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-600">Student ID</label>
-              <p className="text-gray-800 font-medium">{student.studentId}</p>
+<p className="text-gray-800 font-medium">{student.student_id_c}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Class</label>
-              <p className="text-gray-800 font-medium">{student.class}</p>
+<label className="text-sm font-medium text-gray-600">Class</label>
+              <p className="text-gray-800 font-medium">{student.class_c?.Name || student.class_c}</p>
             </div>
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-600">Email</label>
-            <p className="text-gray-800 font-medium">{student.email}</p>
+<label className="text-sm font-medium text-gray-600">Email</label>
+            <p className="text-gray-800 font-medium">{student.email_c}</p>
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-600">Phone</label>
-            <p className="text-gray-800 font-medium">{student.phone}</p>
+<label className="text-sm font-medium text-gray-600">Phone</label>
+            <p className="text-gray-800 font-medium">{student.phone_c}</p>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-600">Date of Birth</label>
-              <p className="text-gray-800 font-medium">
-                {format(new Date(student.dateOfBirth), "MMM dd, yyyy")}
+<p className="text-gray-800 font-medium">
+                {format(new Date(student.date_of_birth_c), "MMM dd, yyyy")}
               </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">Enrollment Date</label>
-              <p className="text-gray-800 font-medium">
-                {format(new Date(student.enrollmentDate), "MMM dd, yyyy")}
+<p className="text-gray-800 font-medium">
+                {format(new Date(student.enrollment_date_c), "MMM dd, yyyy")}
               </p>
             </div>
           </div>
@@ -134,12 +138,12 @@ const StudentDetail = () => {
         <CardContent className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-600">Guardian Name</label>
-            <p className="text-gray-800 font-medium">{student.guardianName}</p>
+<p className="text-gray-800 font-medium">{student.guardian_name_c}</p>
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-600">Guardian Contact</label>
-            <p className="text-gray-800 font-medium">{student.guardianContact}</p>
+<label className="text-sm font-medium text-gray-600">Guardian Contact</label>
+            <p className="text-gray-800 font-medium">{student.guardian_contact_c}</p>
           </div>
         </CardContent>
       </Card>
@@ -164,7 +168,7 @@ const StudentDetail = () => {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-3xl font-bold text-warning mb-2">
-              {grades.filter(g => g.percentage >= 90).length}
+{grades.filter(g => (g.percentage_c || 0) >= 90).length}
             </div>
             <div className="text-sm text-gray-600">A Grades</div>
           </CardContent>
@@ -182,9 +186,9 @@ const StudentDetail = () => {
                 <div key={grade.Id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-medium text-gray-800">{grade.subject}</h4>
-                      <Badge variant={grade.percentage >= 90 ? "success" : grade.percentage >= 80 ? "primary" : grade.percentage >= 70 ? "warning" : "error"}>
-                        {grade.examType}
+<h4 className="font-medium text-gray-800">{grade.subject_c}</h4>
+                      <Badge variant={(grade.percentage_c || 0) >= 90 ? "success" : (grade.percentage_c || 0) >= 80 ? "primary" : (grade.percentage_c || 0) >= 70 ? "warning" : "error"}>
+                        {grade.exam_type_c}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">
@@ -193,9 +197,9 @@ const StudentDetail = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-800">
-                      {grade.marks}/{grade.totalMarks}
+{grade.marks_c}/{grade.total_marks_c}
                     </div>
-                    <div className="text-sm text-gray-600">{grade.percentage}%</div>
+                    <div className="text-sm text-gray-600">{grade.percentage_c}%</div>
                   </div>
                 </div>
               ))}
@@ -223,24 +227,24 @@ const StudentDetail = () => {
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-success mb-2">
-              {attendance.filter(a => a.status === "present").length}
+<div className="text-3xl font-bold text-success mb-2">
+              {attendance.filter(a => a.status_c === "present").length}
             </div>
             <div className="text-sm text-gray-600">Present Days</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-error mb-2">
-              {attendance.filter(a => a.status === "absent").length}
+<div className="text-3xl font-bold text-error mb-2">
+              {attendance.filter(a => a.status_c === "absent").length}
             </div>
             <div className="text-sm text-gray-600">Absent Days</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-warning mb-2">
-              {attendance.filter(a => a.status === "late").length}
+<div className="text-3xl font-bold text-warning mb-2">
+              {attendance.filter(a => a.status_c === "late").length}
             </div>
             <div className="text-sm text-gray-600">Late Days</div>
           </CardContent>
@@ -259,11 +263,11 @@ const StudentDetail = () => {
                   <div className="flex items-center space-x-3">
                     <ApperIcon name="Calendar" size={16} className="text-gray-400" />
                     <span className="font-medium text-gray-800">
-                      {format(new Date(record.date), "EEEE, MMM dd, yyyy")}
+{format(new Date(record.date_c), "EEEE, MMM dd, yyyy")}
                     </span>
                   </div>
-                  <Badge variant={record.status}>
-                    {record.status}
+                  <Badge variant={record.status_c}>
+                    {record.status_c}
                   </Badge>
                   {record.notes && (
                     <span className="text-sm text-gray-600 italic">{record.notes}</span>
@@ -301,7 +305,7 @@ const StudentDetail = () => {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-3xl font-bold text-warning mb-2">
-              {assignments.filter(a => a.status === "pending").length}
+{assignments.filter(a => a.status_c === "pending").length}
             </div>
             <div className="text-sm text-gray-600">Pending</div>
           </CardContent>
@@ -319,26 +323,26 @@ const StudentDetail = () => {
                 <div key={assignment.Id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-medium text-gray-800">{assignment.title}</h4>
-                      <Badge variant={assignment.status}>
-                        {assignment.status}
+<h4 className="font-medium text-gray-800">{assignment.title_c}</h4>
+                      <Badge variant={assignment.status_c}>
+                        {assignment.status_c}
                       </Badge>
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <span>{assignment.subject}</span>
                       <span>Due: {format(new Date(assignment.dueDate), "MMM dd, yyyy")}</span>
-                      {assignment.submissionDate && (
-                        <span>Submitted: {format(new Date(assignment.submissionDate), "MMM dd, yyyy")}</span>
+{assignment.submission_date_c && (
+                        <span>Submitted: {format(new Date(assignment.submission_date_c), "MMM dd, yyyy")}</span>
                       )}
                     </div>
                   </div>
                   {assignment.status === "graded" && (
                     <div className="text-right">
-                      <div className="text-xl font-bold text-gray-800">
-                        {assignment.score}/{assignment.maxScore}
+<div className="text-xl font-bold text-gray-800">
+                        {assignment.score_c}/{assignment.max_score_c}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {Math.round((assignment.score / assignment.maxScore) * 100)}%
+                        {Math.round((assignment.score_c / assignment.max_score_c) * 100)}%
                       </div>
                     </div>
                   )}
@@ -377,24 +381,24 @@ const StudentDetail = () => {
         <CardContent className="p-6">
           <div className="flex items-center space-x-6">
             <img
-              src={student.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
-              alt={student.name}
+src={student.photo_c || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
+              alt={student.Name}
               className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
             />
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">{student.name}</h1>
+<h1 className="text-3xl font-bold text-gray-800 mb-2">{student.Name}</h1>
               <div className="flex items-center space-x-4 text-gray-600 mb-4">
                 <span className="flex items-center space-x-1">
                   <ApperIcon name="Hash" size={16} />
-                  <span>{student.studentId}</span>
+<span>{student.student_id_c}</span>
                 </span>
                 <span className="flex items-center space-x-1">
-                  <ApperIcon name="GraduationCap" size={16} />
-                  <span>{student.class}</span>
+<ApperIcon name="GraduationCap" size={16} />
+                  <span>{student.class_c?.Name || student.class_c}</span>
                 </span>
-                <span className="flex items-center space-x-1">
+<span className="flex items-center space-x-1">
                   <ApperIcon name="Mail" size={16} />
-                  <span>{student.email}</span>
+                  <span>{student.email_c}</span>
                 </span>
               </div>
               <div className="flex items-center space-x-4">

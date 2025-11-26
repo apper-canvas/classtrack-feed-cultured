@@ -3,7 +3,7 @@ import { format } from "date-fns";
 class AssignmentService {
   constructor() {
     this.tableName = 'assignment_c'
-    this.lookupFields = ['student_id_c']
+this.lookupFields = ['student_id_c.Id', 'student_id_c.Name']
   }
 
   async getAll() {

@@ -1,10 +1,10 @@
-import { getApperClient } from "@/services/apperClient"
-import { format } from "date-fns"
+import { format } from "date-fns";
+import { getApperClient } from "@/services/apperClient";
 
 class AttendanceService {
   constructor() {
-    this.tableName = 'attendance_c'
-    this.lookupFields = ['student_id_c']
+    this.tableName = 'attendance_c';
+    this.lookupFields = ['student_id_c.Id', 'student_id_c.Name'];
   }
 
   async getAll() {
@@ -16,7 +16,7 @@ class AttendanceService {
 
       const params = {
         fields: [
-          {"field": {"Name": "Name"}},
+{"field": {"Name": "Name"}},
           {"field": {"Name": "student_id_c"}},
           {"field": {"Name": "date_c"}},
           {"field": {"Name": "status_c"}},
@@ -45,7 +45,7 @@ class AttendanceService {
         throw new Error("ApperClient not initialized")
       }
 
-      const params = {
+const params = {
         fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "student_id_c"}},
@@ -267,12 +267,12 @@ class AttendanceService {
     try {
       const dateStr = format(new Date(date), "yyyy-MM-dd")
       
-      // Check if attendance already exists for this date and student
+// Check if attendance already exists for this date and student
       const existing = await this.getByDate(dateStr)
-      const existingRecord = existing.find(a => 
-        a.student_id_c?.Id === parseInt(studentId) || a.student_id_c === parseInt(studentId)
-      )
-      
+      const existingRecord = existing.find(a => {
+        const studentIdValue = a.student_id_c?.Id || a.student_id_c;
+        return studentIdValue === parseInt(studentId);
+      });
       if (existingRecord) {
         // Update existing record
         return this.update(existingRecord.Id, { status_c: status, notes_c: notes })

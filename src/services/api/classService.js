@@ -1,4 +1,4 @@
-import { getApperClient } from "@/services/apperClient"
+import { getApperClient } from "@/services/apperClient";
 
 class ClassService {
   constructor() {
@@ -41,7 +41,7 @@ class ClassService {
         throw new Error("ApperClient not initialized")
       }
 
-      const params = {
+const params = {
         fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "academic_year_c"}},

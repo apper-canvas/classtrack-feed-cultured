@@ -3,7 +3,7 @@ import { getApperClient } from "@/services/apperClient"
 class GradeService {
   constructor() {
     this.tableName = 'grade_c'
-    this.lookupFields = ['student_id_c']
+this.lookupFields = ['student_id_c.Id', 'student_id_c.Name']
   }
 
   async getAll() {

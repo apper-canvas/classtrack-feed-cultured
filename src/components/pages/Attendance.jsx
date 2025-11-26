@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react"
-import { Card, CardHeader, CardContent } from "@/components/atoms/Card"
-import Button from "@/components/atoms/Button"
-import Select from "@/components/atoms/Select"
-import Badge from "@/components/atoms/Badge"
-import AttendanceCalendar from "@/components/molecules/AttendanceCalendar"
-import Loading from "@/components/ui/Loading"
-import ErrorView from "@/components/ui/ErrorView"
-import Empty from "@/components/ui/Empty"
-import ApperIcon from "@/components/ApperIcon"
-import studentService from "@/services/api/studentService"
-import attendanceService from "@/services/api/attendanceService"
-import { format, startOfMonth, endOfMonth } from "date-fns"
-import { toast } from "react-toastify"
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/atoms/Card";
+import { endOfMonth, format, startOfMonth } from "date-fns";
+import { toast } from "react-toastify";
+import studentService from "@/services/api/studentService";
+import attendanceService from "@/services/api/attendanceService";
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import ErrorView from "@/components/ui/ErrorView";
+import Empty from "@/components/ui/Empty";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import AttendanceCalendar from "@/components/molecules/AttendanceCalendar";
 
 const Attendance = () => {
   const [students, setStudents] = useState([])
@@ -51,10 +51,11 @@ const Attendance = () => {
       const record = await attendanceService.markAttendance(studentId, date, status)
       
       // Update local state
-      setAttendance(prev => {
-        const filtered = prev.filter(a => 
-          !(a.studentId === String(studentId) && a.date === format(new Date(date), "yyyy-MM-dd"))
-        )
+setAttendance(prev => {
+        const filtered = prev.filter(a => {
+          const attStudentId = a.student_id_c?.Id || a.student_id_c;
+          return !(String(attStudentId) === String(studentId) && a.date_c === format(new Date(date), "yyyy-MM-dd"));
+        });
         return [...filtered, record]
       })
       
@@ -65,20 +66,25 @@ const Attendance = () => {
     }
   }
 
-  const getStudentAttendance = (studentId, date = null) => {
+const getStudentAttendance = (studentId, date = null) => {
     if (date) {
       const dateStr = format(new Date(date), "yyyy-MM-dd")
-      return attendance.find(a => a.studentId === String(studentId) && a.date === dateStr)
+      return attendance.find(a => {
+        const attStudentId = a.student_id_c?.Id || a.student_id_c;
+        return String(attStudentId) === String(studentId) && a.date_c === dateStr;
+      });
     }
-    return attendance.filter(a => a.studentId === String(studentId))
+    return attendance.filter(a => {
+      const attStudentId = a.student_id_c?.Id || a.student_id_c;
+      return String(attStudentId) === String(studentId);
+    });
   }
 
-  const getAttendanceRate = (studentId) => {
-    const records = getStudentAttendance(studentId)
-    if (records.length === 0) return 0
-    
-    const presentCount = records.filter(r => r.status === "present").length
-    return Math.round((presentCount / records.length) * 100)
+const getAttendanceRate = (studentId) => {
+    const studentAttendance = getStudentAttendance(studentId)
+    if (studentAttendance.length === 0) return 0
+    const presentCount = studentAttendance.filter(a => a.status_c === "present").length
+    return Math.round((presentCount / studentAttendance.length) * 100)
   }
 
   const getFilteredStudents = () => {
@@ -308,7 +314,10 @@ const Attendance = () => {
           <CardContent>
             <div className="space-y-3">
               {filteredStudents.map(student => {
-                const studentRecords = monthAttendance.filter(a => a.studentId === String(student.Id))
+const studentRecords = monthAttendance.filter(a => {
+                  const attStudentId = a.student_id_c?.Id || a.student_id_c;
+                  return String(attStudentId) === String(student.Id);
+                });
                 const studentRate = studentRecords.length > 0
                   ? Math.round((studentRecords.filter(r => r.status === "present").length / studentRecords.length) * 100)
                   : 0

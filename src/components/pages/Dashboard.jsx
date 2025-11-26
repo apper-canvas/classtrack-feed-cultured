@@ -54,11 +54,11 @@ const Dashboard = () => {
   // Calculate statistics
   const totalStudents = students.length
   const averageGrade = grades.length > 0 
-    ? Math.round(grades.reduce((sum, grade) => sum + grade.percentage, 0) / grades.length)
+? Math.round(grades.reduce((sum, grade) => sum + (grade.percentage_c || 0), 0) / grades.length)
     : 0
   
   const attendanceRate = attendance.length > 0
-    ? Math.round((attendance.filter(a => a.status === "present").length / attendance.length) * 100)
+? Math.round((attendance.filter(a => a.status_c === "present").length / attendance.length) * 100)
     : 0
   
   const pendingAssignments = assignments.filter(a => a.status === "pending").length
@@ -70,7 +70,8 @@ const Dashboard = () => {
     // Recent grade entries (last 5)
     const recentGrades = grades.slice(-5).reverse()
     recentGrades.forEach(grade => {
-      const student = students.find(s => s.Id === parseInt(grade.studentId))
+const studentId = grade.student_id_c?.Id || grade.student_id_c;
+      const student = students.find(s => s.Id === parseInt(studentId))
       if (student) {
         activities.push({
           type: "grade",
@@ -88,14 +89,20 @@ const Dashboard = () => {
   // Get top performers
   const getTopPerformers = () => {
     const studentPerformance = students.map(student => {
-      const studentGrades = grades.filter(g => g.studentId === String(student.Id))
+const studentGrades = grades.filter(g => {
+        const gradeStudentId = g.student_id_c?.Id || g.student_id_c;
+        return String(gradeStudentId) === String(student.Id);
+      });
       const avgGrade = studentGrades.length > 0 
-        ? Math.round(studentGrades.reduce((sum, g) => sum + g.percentage, 0) / studentGrades.length)
+        ? Math.round(studentGrades.reduce((sum, g) => sum + (g.percentage_c || 0), 0) / studentGrades.length)
         : 0
       
-      const studentAttendance = attendance.filter(a => a.studentId === String(student.Id))
+      const studentAttendance = attendance.filter(a => {
+        const attStudentId = a.student_id_c?.Id || a.student_id_c;
+        return String(attStudentId) === String(student.Id);
+      });
       const attendanceRate = studentAttendance.length > 0
-        ? Math.round((studentAttendance.filter(a => a.status === "present").length / studentAttendance.length) * 100)
+        ? Math.round((studentAttendance.filter(a => a.status_c === "present").length / studentAttendance.length) * 100)
         : 0
 
       return {

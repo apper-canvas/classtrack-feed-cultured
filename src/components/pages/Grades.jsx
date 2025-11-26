@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react"
-import { Card, CardHeader, CardContent } from "@/components/atoms/Card"
-import Button from "@/components/atoms/Button"
-import Select from "@/components/atoms/Select"
-import Badge from "@/components/atoms/Badge"
-import GradeEntry from "@/components/molecules/GradeEntry"
-import Loading from "@/components/ui/Loading"
-import ErrorView from "@/components/ui/ErrorView"
-import Empty from "@/components/ui/Empty"
-import ApperIcon from "@/components/ApperIcon"
-import studentService from "@/services/api/studentService"
-import gradeService from "@/services/api/gradeService"
-import { toast } from "react-toastify"
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/atoms/Card";
+import { toast } from "react-toastify";
+import gradeService from "@/services/api/gradeService";
+import studentService from "@/services/api/studentService";
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import ErrorView from "@/components/ui/ErrorView";
+import Empty from "@/components/ui/Empty";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import GradeEntry from "@/components/molecules/GradeEntry";
 
 const Grades = () => {
   const [students, setStudents] = useState([])
@@ -62,21 +62,24 @@ const Grades = () => {
   }
 
   const getStudentGrades = (studentId) => {
-    return grades.filter(g => g.studentId === String(studentId))
+return grades.filter(g => {
+      const gradeStudentId = g.student_id_c?.Id || g.student_id_c;
+      return String(gradeStudentId) === String(studentId);
+    });
   }
 
   const getStudentAverage = (studentId) => {
     const studentGrades = getStudentGrades(studentId)
     if (studentGrades.length === 0) return 0
     
-    return Math.round(studentGrades.reduce((sum, grade) => sum + grade.percentage, 0) / studentGrades.length)
+return Math.round(studentGrades.reduce((sum, grade) => sum + (grade.percentage_c || 0), 0) / studentGrades.length)
   }
 
   const getFilteredStudents = () => {
     let filtered = [...students]
     
     if (selectedClass !== "all") {
-      filtered = filtered.filter(s => s.class === selectedClass)
+filtered = filtered.filter(s => (s.class_c?.Name || s.class_c) === selectedClass)
     }
     
     // Sort by average grade (highest first)
@@ -86,19 +89,18 @@ const Grades = () => {
   }
 
   const getUniqueClasses = () => {
-    return [...new Set(students.map(s => s.class))].sort()
+return [...new Set(students.map(s => s.class_c?.Name || s.class_c))].sort()
   }
 
   const getSubjectGrades = () => {
     if (selectedSubject === "all") return grades
-    return grades.filter(g => g.subject === selectedSubject)
+return grades.filter(g => g.subject_c === selectedSubject)
   }
 
   const getClassAverage = () => {
     const filteredGrades = getSubjectGrades()
     if (filteredGrades.length === 0) return 0
-    
-    return Math.round(filteredGrades.reduce((sum, grade) => sum + grade.percentage, 0) / filteredGrades.length)
+return Math.round(filteredGrades.reduce((sum, grade) => sum + (grade.percentage_c || 0), 0) / filteredGrades.length)
   }
 
   if (loading) return <Loading />
@@ -283,40 +285,39 @@ const Grades = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {grades.slice(-10).reverse().map(grade => {
-                const student = students.find(s => s.Id === parseInt(grade.studentId))
+{grades.slice(-10).reverse().map(grade => {
+                const studentId = grade.student_id_c?.Id || grade.student_id_c;
+                const student = students.find(s => s.Id === parseInt(studentId))
                 if (!student) return null
                 
                 return (
-                  <div key={grade.Id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+<div key={grade.Id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <img
-                        src={student.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"}
-                        alt={student.name}
+                        src={student?.photo_c || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"}
+                        alt={student?.Name}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                       <div>
-                        <p className="font-medium text-gray-800">{student.name}</p>
-                        <p className="text-sm text-gray-600">{grade.subject} - {grade.examType}</p>
+                        <div className="font-medium text-gray-800">{student?.Name}</div>
+                        <div className="text-sm text-gray-600">{grade.subject_c}</div>
                       </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-gray-800">{grade.marks_c}/{grade.total_marks_c}</div>
+                      <div className="text-sm text-gray-600">{grade.percentage_c}%</div>
                     </div>
                     
-                    <div className="flex items-center space-x-3">
-                      <div className="text-right">
-                        <div className="font-bold text-gray-800">{grade.marks}/{grade.totalMarks}</div>
-                        <div className="text-sm text-gray-600">{grade.percentage}%</div>
-                      </div>
-                      <Badge 
-                        variant={
-                          grade.percentage >= 90 ? "success" : 
-                          grade.percentage >= 80 ? "primary" : 
-                          grade.percentage >= 70 ? "warning" : "error"
-                        }
-                        size="sm"
-                      >
-                        {grade.percentage >= 90 ? "A" : grade.percentage >= 80 ? "B" : grade.percentage >= 70 ? "C" : grade.percentage >= 60 ? "D" : "F"}
-                      </Badge>
-                    </div>
+                    <Badge 
+                      variant={
+                        grade.percentage_c >= 90 ? "success" : 
+                        grade.percentage_c >= 80 ? "primary" : 
+                        grade.percentage_c >= 70 ? "warning" : "error"
+                      }
+                      size="sm"
+                    >
+                      {grade.percentage_c >= 90 ? "A" : grade.percentage_c >= 80 ? "B" : grade.percentage_c >= 70 ? "C" : grade.percentage_c >= 60 ? "D" : "F"}
+                    </Badge>
                   </div>
                 )
               })}
