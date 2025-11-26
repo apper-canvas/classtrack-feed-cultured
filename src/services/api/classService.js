@@ -1,64 +1,200 @@
-import classesData from "@/services/mockData/classes.json"
+import { getApperClient } from "@/services/apperClient"
 
 class ClassService {
   constructor() {
-    this.classes = [...classesData]
+    this.tableName = 'class_c'
   }
 
   async getAll() {
-    await this.delay(200)
-    return [...this.classes]
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "academic_year_c"}},
+          {"field": {"Name": "student_count_c"}}
+        ]
+      }
+
+      const response = await apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        return []
+      }
+
+      return response.data || []
+    } catch (error) {
+      console.error("Error fetching classes:", error)
+      return []
+    }
   }
 
   async getById(id) {
-    await this.delay(200)
-    const classRecord = this.classes.find(c => c.Id === parseInt(id))
-    return classRecord ? { ...classRecord } : null
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "academic_year_c"}},
+          {"field": {"Name": "student_count_c"}}
+        ]
+      }
+
+      const response = await apperClient.getRecordById(this.tableName, parseInt(id), params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        return null
+      }
+
+      return response.data || null
+    } catch (error) {
+      console.error(`Error fetching class ${id}:`, error)
+      return null
+    }
   }
 
   async create(classData) {
-    await this.delay(300)
-    const maxId = Math.max(...this.classes.map(c => c.Id), 0)
-    const newClass = {
-      ...classData,
-      Id: maxId + 1,
-      studentCount: 0
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      // Prepare data with only updateable fields
+      const recordData = {}
+      if (classData.Name) recordData.Name = classData.Name
+      if (classData.academic_year_c) recordData.academic_year_c = classData.academic_year_c
+      if (classData.student_count_c !== undefined) recordData.student_count_c = classData.student_count_c
+
+      const params = {
+        records: [recordData]
+      }
+
+      const response = await apperClient.createRecord(this.tableName, params)
+
+      if (!response.success) {
+        console.error(response.message)
+        return null
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success)
+        const failed = response.results.filter(r => !r.success)
+
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} classes: ${JSON.stringify(failed)}`)
+        }
+        return successful.length > 0 ? successful[0].data : null
+      }
+
+      return null
+    } catch (error) {
+      console.error("Error creating class:", error)
+      return null
     }
-    this.classes.push(newClass)
-    return { ...newClass }
   }
 
   async update(id, data) {
-    await this.delay(300)
-    const index = this.classes.findIndex(c => c.Id === parseInt(id))
-    if (index === -1) return null
-    
-    this.classes[index] = { ...this.classes[index], ...data }
-    return { ...this.classes[index] }
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      // Prepare data with only updateable fields
+      const recordData = { Id: parseInt(id) }
+      if (data.Name !== undefined) recordData.Name = data.Name
+      if (data.academic_year_c !== undefined) recordData.academic_year_c = data.academic_year_c
+      if (data.student_count_c !== undefined) recordData.student_count_c = data.student_count_c
+
+      const params = {
+        records: [recordData]
+      }
+
+      const response = await apperClient.updateRecord(this.tableName, params)
+
+      if (!response.success) {
+        console.error(response.message)
+        return null
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success)
+        const failed = response.results.filter(r => !r.success)
+
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} classes: ${JSON.stringify(failed)}`)
+        }
+        return successful.length > 0 ? successful[0].data : null
+      }
+
+      return null
+    } catch (error) {
+      console.error("Error updating class:", error)
+      return null
+    }
   }
 
   async delete(id) {
-    await this.delay(200)
-    const index = this.classes.findIndex(c => c.Id === parseInt(id))
-    if (index === -1) return false
-    
-    this.classes.splice(index, 1)
-    return true
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        RecordIds: [parseInt(id)]
+      }
+
+      const response = await apperClient.deleteRecord(this.tableName, params)
+
+      if (!response.success) {
+        console.error(response.message)
+        return false
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success)
+        const failed = response.results.filter(r => !r.success)
+
+        if (failed.length > 0) {
+          console.error(`Failed to delete ${failed.length} classes: ${JSON.stringify(failed)}`)
+        }
+        return successful.length === 1
+      }
+
+      return false
+    } catch (error) {
+      console.error("Error deleting class:", error)
+      return false
+    }
   }
 
   async updateStudentCount(className, count) {
-    await this.delay(200)
-    const classRecord = this.classes.find(c => c.name === className)
-    if (classRecord) {
-      classRecord.studentCount = count
-      return { ...classRecord }
+    try {
+      const classes = await this.getAll()
+      const classRecord = classes.find(c => c.Name === className)
+      if (classRecord) {
+        return this.update(classRecord.Id, { student_count_c: count })
+      }
+      return null
+    } catch (error) {
+      console.error("Error updating student count:", error)
+      return null
     }
-    return null
-  }
-
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
   }
 }
+
+export default new ClassService()
 
 export default new ClassService()

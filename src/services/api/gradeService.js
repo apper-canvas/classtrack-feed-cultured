@@ -1,86 +1,311 @@
-import gradesData from "@/services/mockData/grades.json"
+import { getApperClient } from "@/services/apperClient"
 
 class GradeService {
   constructor() {
-    this.grades = [...gradesData]
+    this.tableName = 'grade_c'
+    this.lookupFields = ['student_id_c']
   }
 
   async getAll() {
-    await this.delay(250)
-    return [...this.grades]
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "student_id_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "exam_type_c"}},
+          {"field": {"Name": "marks_c"}},
+          {"field": {"Name": "total_marks_c"}},
+          {"field": {"Name": "percentage_c"}},
+          {"field": {"Name": "date_c"}}
+        ]
+      }
+
+      const response = await apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        return []
+      }
+
+      return response.data || []
+    } catch (error) {
+      console.error("Error fetching grades:", error)
+      return []
+    }
   }
 
   async getById(id) {
-    await this.delay(200)
-    const grade = this.grades.find(g => g.Id === parseInt(id))
-    return grade ? { ...grade } : null
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "student_id_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "exam_type_c"}},
+          {"field": {"Name": "marks_c"}},
+          {"field": {"Name": "total_marks_c"}},
+          {"field": {"Name": "percentage_c"}},
+          {"field": {"Name": "date_c"}}
+        ]
+      }
+
+      const response = await apperClient.getRecordById(this.tableName, parseInt(id), params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        return null
+      }
+
+      return response.data || null
+    } catch (error) {
+      console.error(`Error fetching grade ${id}:`, error)
+      return null
+    }
   }
 
   async getByStudent(studentId) {
-    await this.delay(250)
-    return this.grades.filter(g => g.studentId === String(studentId)).map(g => ({ ...g }))
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "student_id_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "exam_type_c"}},
+          {"field": {"Name": "marks_c"}},
+          {"field": {"Name": "total_marks_c"}},
+          {"field": {"Name": "percentage_c"}},
+          {"field": {"Name": "date_c"}}
+        ],
+        where: [{
+          "FieldName": "student_id_c",
+          "Operator": "EqualTo",
+          "Values": [parseInt(studentId)]
+        }]
+      }
+
+      const response = await apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        return []
+      }
+
+      return response.data || []
+    } catch (error) {
+      console.error("Error fetching grades by student:", error)
+      return []
+    }
   }
 
   async getBySubject(subject) {
-    await this.delay(250)
-    return this.grades.filter(g => g.subject === subject).map(g => ({ ...g }))
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "student_id_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "exam_type_c"}},
+          {"field": {"Name": "marks_c"}},
+          {"field": {"Name": "total_marks_c"}},
+          {"field": {"Name": "percentage_c"}},
+          {"field": {"Name": "date_c"}}
+        ],
+        where: [{
+          "FieldName": "subject_c",
+          "Operator": "EqualTo",
+          "Values": [subject]
+        }]
+      }
+
+      const response = await apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        return []
+      }
+
+      return response.data || []
+    } catch (error) {
+      console.error("Error fetching grades by subject:", error)
+      return []
+    }
   }
 
   async create(grade) {
-    await this.delay(300)
-    const maxId = Math.max(...this.grades.map(g => g.Id), 0)
-    const newGrade = {
-      ...grade,
-      Id: maxId + 1,
-      percentage: Math.round((grade.marks / grade.totalMarks) * 100)
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      // Prepare data with only updateable fields
+      const recordData = {}
+      if (grade.Name) recordData.Name = grade.Name
+      if (grade.student_id_c) recordData.student_id_c = parseInt(grade.student_id_c)
+      if (grade.subject_c) recordData.subject_c = grade.subject_c
+      if (grade.exam_type_c) recordData.exam_type_c = grade.exam_type_c
+      if (grade.marks_c !== undefined) recordData.marks_c = grade.marks_c
+      if (grade.total_marks_c !== undefined) recordData.total_marks_c = grade.total_marks_c
+      if (grade.percentage_c !== undefined) recordData.percentage_c = grade.percentage_c
+      if (grade.date_c) recordData.date_c = grade.date_c
+
+      const params = {
+        records: [recordData]
+      }
+
+      const response = await apperClient.createRecord(this.tableName, params)
+
+      if (!response.success) {
+        console.error(response.message)
+        return null
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success)
+        const failed = response.results.filter(r => !r.success)
+
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} grades: ${JSON.stringify(failed)}`)
+        }
+        return successful.length > 0 ? successful[0].data : null
+      }
+
+      return null
+    } catch (error) {
+      console.error("Error creating grade:", error)
+      return null
     }
-    this.grades.push(newGrade)
-    return { ...newGrade }
   }
 
   async update(id, data) {
-    await this.delay(300)
-    const index = this.grades.findIndex(g => g.Id === parseInt(id))
-    if (index === -1) return null
-    
-    const updatedGrade = { ...this.grades[index], ...data }
-    if (updatedGrade.marks && updatedGrade.totalMarks) {
-      updatedGrade.percentage = Math.round((updatedGrade.marks / updatedGrade.totalMarks) * 100)
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      // Prepare data with only updateable fields
+      const recordData = { Id: parseInt(id) }
+      if (data.Name !== undefined) recordData.Name = data.Name
+      if (data.student_id_c !== undefined) recordData.student_id_c = parseInt(data.student_id_c)
+      if (data.subject_c !== undefined) recordData.subject_c = data.subject_c
+      if (data.exam_type_c !== undefined) recordData.exam_type_c = data.exam_type_c
+      if (data.marks_c !== undefined) recordData.marks_c = data.marks_c
+      if (data.total_marks_c !== undefined) recordData.total_marks_c = data.total_marks_c
+      if (data.percentage_c !== undefined) recordData.percentage_c = data.percentage_c
+      if (data.date_c !== undefined) recordData.date_c = data.date_c
+
+      const params = {
+        records: [recordData]
+      }
+
+      const response = await apperClient.updateRecord(this.tableName, params)
+
+      if (!response.success) {
+        console.error(response.message)
+        return null
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success)
+        const failed = response.results.filter(r => !r.success)
+
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} grades: ${JSON.stringify(failed)}`)
+        }
+        return successful.length > 0 ? successful[0].data : null
+      }
+
+      return null
+    } catch (error) {
+      console.error("Error updating grade:", error)
+      return null
     }
-    
-    this.grades[index] = updatedGrade
-    return { ...updatedGrade }
   }
 
   async delete(id) {
-    await this.delay(200)
-    const index = this.grades.findIndex(g => g.Id === parseInt(id))
-    if (index === -1) return false
-    
-    this.grades.splice(index, 1)
-    return true
+    try {
+      const apperClient = getApperClient()
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized")
+      }
+
+      const params = {
+        RecordIds: [parseInt(id)]
+      }
+
+      const response = await apperClient.deleteRecord(this.tableName, params)
+
+      if (!response.success) {
+        console.error(response.message)
+        return false
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success)
+        const failed = response.results.filter(r => !r.success)
+
+        if (failed.length > 0) {
+          console.error(`Failed to delete ${failed.length} grades: ${JSON.stringify(failed)}`)
+        }
+        return successful.length === 1
+      }
+
+      return false
+    } catch (error) {
+      console.error("Error deleting grade:", error)
+      return false
+    }
   }
 
   async getAverageByStudent(studentId) {
-    await this.delay(200)
-    const studentGrades = this.grades.filter(g => g.studentId === String(studentId))
-    if (studentGrades.length === 0) return 0
-    
-    const total = studentGrades.reduce((sum, grade) => sum + grade.percentage, 0)
-    return Math.round(total / studentGrades.length)
+    try {
+      const studentGrades = await this.getByStudent(studentId)
+      if (studentGrades.length === 0) return 0
+      
+      const total = studentGrades.reduce((sum, grade) => sum + (grade.percentage_c || 0), 0)
+      return Math.round(total / studentGrades.length)
+    } catch (error) {
+      console.error("Error calculating student average:", error)
+      return 0
+    }
   }
 
   async getClassAverage() {
-    await this.delay(200)
-    if (this.grades.length === 0) return 0
-    
-    const total = this.grades.reduce((sum, grade) => sum + grade.percentage, 0)
-    return Math.round(total / this.grades.length)
-  }
-
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    try {
+      const grades = await this.getAll()
+      if (grades.length === 0) return 0
+      
+      const total = grades.reduce((sum, grade) => sum + (grade.percentage_c || 0), 0)
+      return Math.round(total / grades.length)
+    } catch (error) {
+      console.error("Error calculating class average:", error)
+      return 0
+    }
   }
 }
+
+export default new GradeService()
 
 export default new GradeService()

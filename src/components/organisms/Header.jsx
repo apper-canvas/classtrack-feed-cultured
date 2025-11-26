@@ -54,8 +54,8 @@ const Header = ({ onAddStudent, onMobileMenuToggle }) => {
             >
               <option value="all">All Classes</option>
               {classes.map(cls => (
-                <option key={cls.Id} value={cls.name}>
-                  {cls.name}
+<option key={cls.Id} value={cls.Name}>
+                  {cls.Name}
                 </option>
               ))}
             </Select>
