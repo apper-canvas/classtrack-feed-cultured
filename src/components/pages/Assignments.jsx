@@ -86,6 +86,7 @@ const classStudentIds = students
         default:
           return 0
       }
+    });
 
     return filtered
   }
@@ -316,16 +317,16 @@ const getStatusLabel = (assignment) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-4">
-{assignment.status_c === "graded" && (
+<div className="flex items-center space-x-4">
+                    {assignment.status_c === "graded" && (
                       <div className="text-center">
                         <div className="text-lg font-bold text-gray-800">
-<div className="text-lg font-bold text-gray-800">
                           {assignment.score_c}/{assignment.max_score_c}
                         </div>
                         <div className="text-sm text-gray-600">
                           {Math.round((assignment.score_c / assignment.max_score_c) * 100)}%
                         </div>
+                      </div>
                     )}
 
                     <div className="flex items-center space-x-2">
@@ -361,8 +362,8 @@ const getStatusLabel = (assignment) => {
         </CardContent>
       </Card>
 
-      {/* Upcoming Deadlines */}
-{assignments.filter(a => 
+{/* Upcoming Deadlines */}
+      {assignments.filter(a => 
         a.status_c === "pending" && 
         isAfter(new Date(a.due_date_c), new Date()) &&
         isBefore(new Date(a.due_date_c), new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
