@@ -307,5 +307,3 @@ class GradeService {
 }
 
 export default new GradeService()
-
-export default new GradeService()

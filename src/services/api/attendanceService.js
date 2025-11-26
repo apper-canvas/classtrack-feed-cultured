@@ -319,5 +319,3 @@ class AttendanceService {
 }
 
 export default new AttendanceService()
-
-export default new AttendanceService()
