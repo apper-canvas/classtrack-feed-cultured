@@ -74,17 +74,17 @@ const StudentList = () => {
     }
 
     // Sort students
-    filtered.sort((a, b) => {
+filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
-          return a.name.localeCompare(b.name)
+          return (a.name || "").localeCompare(b.name || "")
         case "studentId":
-          return a.studentId.localeCompare(b.studentId)
+          return (a.studentId || "").localeCompare(b.studentId || "")
         case "class":
-          return a.class.localeCompare(b.class)
+          return (a.class || "").localeCompare(b.class || "")
         case "grade":
-          const aGrades = grades.filter(g => g.studentId === String(a.Id))
-          const bGrades = grades.filter(g => g.studentId === String(b.Id))
+          const aGrades = grades.filter(g => g.studentId === String(a.Id || 0))
+          const bGrades = grades.filter(g => g.studentId === String(b.Id || 0))
           const aAvg = aGrades.length > 0 ? aGrades.reduce((sum, g) => sum + g.percentage, 0) / aGrades.length : 0
           const bAvg = bGrades.length > 0 ? bGrades.reduce((sum, g) => sum + g.percentage, 0) / bGrades.length : 0
           return bAvg - aAvg
